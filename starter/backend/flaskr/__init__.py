@@ -224,7 +224,7 @@ def create_app(test_config=None):
       print(question_searched)
       if not question_searched:
         abort(404, {'message': 'no questions that contains "{}" found.'.format(searching_term)})
-      questions_found = [question.format() for question in question_searched]
+      questions_found = [question.format()['question'] for question in question_searched]
       selections = Question.query.order_by(Question.id).all()
       categories = Category.query.all()
       all_category = [category.format() for category in categories]
@@ -326,15 +326,16 @@ def create_app(test_config=None):
 
       else:
         ques_given = (Question.query.all())
+        print(ques_given)
     else:
       if category_selected:
         ques_given = (Question.query.filter(Question.category == str(category_selected['id'])).filter(Question.id.notin_(previous_ques)).all())
       else:
         ques_given = (Question.question.filter(Question.id.notin_(previous_ques)).all())
 
-    ques_formatted = [question.format()['question'] for question in ques_given]
+    ques_formatted = [question.format() for question in ques_given]
 
-    random_ques =  ques_formatted[random.randint(0, len(ques_formatted))]
+    random_ques =  random.choice(ques_formatted)
 
     return jsonify ({
       'success': True,

@@ -76,21 +76,74 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'Category can not be blank')
 
-    def test_search_question(self):
-        """Test POST to search a question with an existing search term. """
+    # def test_search_question(self):
+    #     """Test POST to search a question with an existing search term. """
+    #
+    #     # Used as header to POST /question
+    #     json_search_question = {
+    #         'searchTerm': 'Taj',
+    #     }
+    #
+    #     res = self.client().post('/questions', json=json_search_question)
+    #     data = json.loads(res.data)
+    #
+    #     self.assertEqual(res.status_code, 200)
+    #     self.assertTrue(data['success'])
+    #     self.assertTrue(len(data['searched_question']) > 0)
+    #     self.assertTrue(data['total_questions'] > 0)
 
-        # Used as header to POST /question
-        json_search_question = {
-            'searchTerm': 'Taj',
+    def test_play_quiz_with_category(self):
+        """Test /quizzes succesfully with given category """
+        json_play_quizz = {
+            'previous_questions': [1, 2, 5],
+            'quiz_category': {
+                'type': 'Science',
+                'id': '1'
+            }
         }
-
-        res = self.client().post('/questions', json=json_search_question)
+        res = self.client().post('/quizzes', json=json_play_quizz)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertTrue(len(data['searched_question']) > 0)
-        self.assertTrue(data['total_questions'] > 0)
+        self.assertTrue(data['question']['question'])
+        # Also check if returned question is NOT in previous question
+        self.assertTrue(data['question']['id'] not in json_play_quizz['previous_questions'])
+
+    def test_play_quiz_without_category(self):
+        """Test /quizzes succesfully without category"""
+        json_play_quizz = {
+            'previous_questions': [1, 2, 5]
+        }
+        res = self.client().post('/quizzes', json=json_play_quizz)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertTrue(data['success'])
+        self.assertTrue(data['question']['question'])
+        # Also check if returned question is NOT in previous question
+        self.assertTrue(data['question']['id'] not in json_play_quizz['previous_questions'])
+
+    def test_error_400_play_quiz(self):
+        """Test /quizzes error without any JSON Body"""
+        res = self.client().post('/quizzes')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['error'], 400)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'],
+                         'Please provide a JSON body with previous question Ids and optional category.')
+
+    def test_error_405_play_quiz(self):
+        """Test /quizzes error with wrong method"""
+        res = self.client().get('/quizzes')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 405)
+        self.assertEqual(data['error'], 405)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'method not allowed')
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

@@ -156,7 +156,6 @@ def create_app(test_config=None):
   @app.route('/questions', methods=['POST'])
   def create_question():
     body = request.get_json()
-    print(body)
     if not body:
       abort(400, {'message': 'request does not contain a valid JSON body.'})
     new_question = body.get('question',None)
@@ -212,19 +211,23 @@ def create_app(test_config=None):
   Try using the word "title" to start. 
   '''
 
-  @app.route('/questions', methods=['POST'])
+  @app.route('/question', methods=['POST'])
   def search_ques():
     body = request.get_json()
+    print(body)
 
     if not body:
       abort(400, {'message': 'request does not contain a valid JSON body.'})
     searching_term = body.get('searchTerm', None)
     if searching_term:
+      #question_searched = Question.query.filter(Question.question).all()
+      #if any(searching_term in s for s in question_searched):
+
       question_searched = Question.query.filter(Question.question.contains(searching_term)).all()
       print(question_searched)
       if not question_searched:
         abort(404, {'message': 'no questions that contains "{}" found.'.format(searching_term)})
-      questions_found = [question.format()['question'] for question in question_searched]
+      questions_found = [question.format() for question in question_searched]
       selections = Question.query.order_by(Question.id).all()
       categories = Category.query.all()
       all_category = [category.format() for category in categories]
@@ -281,7 +284,8 @@ def create_app(test_config=None):
   def category_int_request(category_id):
     categories = Question.query.filter(Question.category == category_id).all()
     #ques_found = categories.order_by(Question.id).all()
-    category_found = [category.format()['question'] for category in categories]
+    category_found = [category.format() for category in categories]
+    print(category_found)
 
     return jsonify({
       'success': True,
@@ -290,13 +294,16 @@ def create_app(test_config=None):
 
   @app.route('/categories/<string:category_id>/questions', methods=['GET'])
   def category_string_req(category_id):
-    ctid = categorysi[category_id]
-    matched = (Question.query.filter(Question.category == ctid).order_by(Question.id).all())
+
+    matched = (Question.query.filter(Question.category == int(category_id)+1).order_by(Question.id).all())
     print(matched)
-    category_found = [category.format()['question'] for category in matched]
+    category_found = [category.format() for category in matched]
+    print(category_found)
     return jsonify ({
       'success': True,
       'current_category': category_found,
+      'total_question':category_found,
+      'questions':category_found
     })
 
 
@@ -318,18 +325,19 @@ def create_app(test_config=None):
       abort(400, {'message': 'Please provide a JSON body with previous question Ids and optional category.'})
     previous_ques = body.get('previous_ques',None)
     category_selected = body.get('quiz_category',None)
+    print(category_selected)
 
 
     if not previous_ques:
-      if category_selected:
-        ques_given = (Question.query.filter(Question.category == str(category_selected['id'])).all())
+      if category_selected['id']!=10:
+        ques_given = (Question.query.filter(Question.category == str(int(category_selected['id'])+1)).all())
 
       else:
         ques_given = (Question.query.all())
-        print(ques_given)
+
     else:
-      if category_selected:
-        ques_given = (Question.query.filter(Question.category == str(category_selected['id'])).filter(Question.id.notin_(previous_ques)).all())
+      if category_selected['id']!=10:
+        ques_given = (Question.query.filter(Question.category == str(int(category_selected['id'])+1)).filter(Question.id.notin_(previous_ques)).all())
       else:
         ques_given = (Question.question.filter(Question.id.notin_(previous_ques)).all())
 

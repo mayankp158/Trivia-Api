@@ -35,7 +35,7 @@ class QuizView extends Component {
     })
   }
 
-  selectCategory = ({type, id=0}) => {
+  selectCategory = ({type, id=10}) => {
     this.setState({quizCategory: {type, id}}, this.getNextQuestion)
   }
 
